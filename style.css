@@ -1,0 +1,108 @@
+:root {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+/* Сетка плашек */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Стиль плашки */
+.achievement-card {
+    background: var(--card-bg);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.achievement-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+}
+
+.card-icon {
+    font-size: 2rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.card-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    border: 1px solid #334155;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px; right: 20px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.close-btn:hover { color: var(--text-main); }
+.modal-icon { font-size: 3rem; margin-bottom: 10px; }
+.modal-date { color: var(--accent); font-size: 0.9rem; }
+.modal-desc { line-height: 1.6; color: var(--text-main); }

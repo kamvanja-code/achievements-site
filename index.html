@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои Достижения</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>🏆 Моя Доска Достижений</h1>
+        <p>Проекты, навыки и победы в реальном времени</p>
+    </header>
+
+    <main>
+        <!-- Сетка, куда JS будет добавлять плашки -->
+        <div class="achievements-grid" id="achievementsGrid"></div>
+    </main>
+
+    <!-- Модальное окно для детальной информации -->
+    <div class="modal" id="achievementModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <div class="modal-icon" id="modalIcon"></div>
+            <h2 id="modalTitle"></h2>
+            <p class="modal-date" id="modalDate"></p>
+            <p class="modal-desc" id="modalDesc"></p>
+        </div>
+    </div>
+
+    <script href="script.js" src="script.js"></script>
+</body>
+</html>
