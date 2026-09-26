@@ -10,17 +10,17 @@
 
     <header>
         <h1>🏆 Моя Доска Достижений</h1>
-        <p>Проекты, навыки и победы в реальном времени</p>
+        <p>Зажмите мышь и тяните в любую сторону, чтобы перемещаться по сотам</p>
     </header>
 
     <main>
-        <!-- Новая обертка для сотовой структуры -->
-        <div class="grid-container">
+        <!-- Окно просмотра с возможностью перетаскивания -->
+        <div class="viewport" id="viewport">
             <div class="achievements-grid" id="achievementsGrid"></div>
         </div>
     </main>
 
-    <!-- Модальное окно для детальной информации -->
+    <!-- Модальное окно -->
     <div class="modal" id="achievementModal">
         <div class="modal-content">
             <span class="close-btn" id="closeModal">&times;</span>
