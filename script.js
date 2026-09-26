@@ -29,7 +29,6 @@ function renderAchievements() {
     });
 }
 
-// Открытие / закрытие модалки
 function openModal(ach) {
     document.getElementById('modalIcon').innerText = ach.icon;
     document.getElementById('modalTitle').innerText = ach.title;
@@ -39,59 +38,96 @@ function openModal(ach) {
 }
 closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
 
-// --- ЛОГИКА СВЕРХПЛАВНОГО ПЕРЕТАСКИВАНИЯ МЫШЬЮ (ДРАГ-ЭНД-ДРОП) ---
-let isDown = false;
+// --- ЛОГИКА ДВИЖЕНИЯ С ИНЕРЦИЕЙ И ПРЕЛОМЛЕНИЕМ (APPLE WATCH) ---
+let isDragging = false;
 let startX, startY;
-let scrollLeft, scrollTop;
+let currentX = 0, currentY = 0;
+let targetX = 0, targetY = 0;
+const ease = 0.1; // Коэффициент плавности инерции (чем меньше, тем плавнее)
 
-// Центрируем холст при загрузческие
-function centerGrid() {
-    viewport.scrollLeft = (grid.scrollWidth - viewport.clientWidth) / 2;
-    viewport.scrollTop = (grid.scrollHeight - viewport.clientHeight) / 2;
+// Центрирование при старте
+function initCenter() {
+    const initLeft = (grid.scrollWidth - window.innerWidth) / 2;
+    const initTop = (grid.scrollHeight - window.innerHeight) / 2;
+    targetX = -initLeft;
+    targetY = -initTop;
+    currentX = targetX;
+    currentY = targetY;
 }
 
+// Слушатели мыши
 viewport.addEventListener('mousedown', (e) => {
-    isDown = true;
-    startX = e.pageX - viewport.offsetLeft;
-    startY = e.pageY - viewport.offsetTop;
-    scrollLeft = viewport.scrollLeft;
-    scrollTop = viewport.scrollTop;
+    isDragging = true;
+    startX = e.clientX - targetX;
+    startY = e.clientY - targetY;
 });
 
-viewport.addEventListener('mouseleave', () => isDown = false);
-viewport.addEventListener('mouseup', () => isDown = false);
-
-viewport.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - viewport.offsetLeft;
-    const y = e.pageY - viewport.offsetTop;
-    // Множитель 1.5 отвечает за скорость и отзывчивость пролистывания
-    const walkX = (x - startX) * 1.5;
-    const walkY = (y - startY) * 1.5;
-    viewport.scrollLeft = scrollLeft - walkX;
-    viewport.scrollTop = scrollTop - walkY;
+window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    targetX = e.clientX - startX;
+    targetY = e.clientY - startY;
 });
 
-// Поддержка тач-скринов для смартфонов
+window.addEventListener('mouseup', () => isDragging = false);
+
+// Слушатели тач-скринов
 viewport.addEventListener('touchstart', (e) => {
-    isDown = true;
-    startX = e.touches[0].pageX - viewport.offsetLeft;
-    startY = e.touches[0].pageY - viewport.offsetTop;
-    scrollLeft = viewport.scrollLeft;
-    scrollTop = viewport.scrollTop;
+    isDragging = true;
+    startX = e.touches[0].clientX - targetX;
+    startY = e.touches[0].clientY - targetY;
 });
-viewport.addEventListener('touchend', () => isDown = false);
-viewport.addEventListener('touchmove', (e) => {
-    if (!isDown) return;
-    const x = e.touches[0].pageX - viewport.offsetLeft;
-    const y = e.touches[0].pageY - viewport.offsetTop;
-    const walkX = (x - startX) * 1.5;
-    const walkY = (y - startY) * 1.5;
-    viewport.scrollLeft = scrollLeft - walkX;
-    viewport.scrollTop = scrollTop - walkY;
+window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    targetX = e.touches[0].clientX - startX;
+    targetY = e.touches[0].clientY - startY;
 });
+window.addEventListener('touchend', () => isDragging = false);
+
+// Магическая функция анимации преломления на периферии
+function updateAnimation() {
+    // Реализация плавного инерционного скольжения холста
+    currentX += (targetX - currentX) * ease;
+    currentY += (targetY - currentY) * ease;
+    grid.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+
+    // Эффект линзы Apple Watch для каждой карточки отдельно
+    const cards = document.querySelectorAll('.achievement-card');
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const maxDistance = Math.min(centerX, centerY) * 1.3; // Радиус начала искажения
+
+    cards.forEach((card, index) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+        const cardCenterY = rect.top + rect.height / 2;
+
+        // Вычисляем расстояние соты от центра экрана
+        const distX = cardCenterX - centerX;
+        const distY = cardCenterY - centerY;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+
+        // Расчет базового смещения для шахматной сетки граней из CSS
+        const baseTranslateY = (index % 4 === 1 || index % 4 === 3) ? (rect.height / 2 + 8) : 0;
+
+        if (distance < maxDistance) {
+            // Эффект сферы: соты в центре крупные (масштаб 1), к краям пропорционально сжимаются
+            const progress = distance / maxDistance;
+            const scale = 1 - Math.pow(progress, 2) * 0.45; // Уменьшение до 55% на самом краю
+            const opacity = 1 - Math.pow(progress, 3) * 0.6; // Плавное исчезновение к периферии
+
+            card.style.transform = `translateY(${baseTranslateY}px) scale(${scale})`;
+            card.style.opacity = opacity;
+        } else {
+            // За границей видимости сильно сжимаем и скрываем
+            card.style.transform = `translateY(${baseTranslateY}px) scale(0.55)`;
+            card.style.opacity = 0.4;
+        }
+    });
+
+    requestAnimationFrame(updateAnimation);
+}
 
 // Запуск
 renderAchievements();
-window.onload = centerGrid;
+initCenter();
+requestAnimationFrame(updateAnimation);

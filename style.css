@@ -5,9 +5,9 @@
     --text-muted: #64748b;
     --accent: #0284c7;
 
-    /* Геометрия сот Apple Watch */
+    /* Новые размеры для стыковки ГРАНЯМИ */
     --hex-width: 160px;
-    --hex-height: calc(var(--hex-width) * 1.1547);
+    --hex-height: calc(var(--hex-width) * 0.866); /* Магическое число для правильного гексагона */
     --gap: 16px;
 }
 
@@ -17,7 +17,7 @@ body {
     color: var(--text-main);
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Отключаем стандартный скролл страницы */
+    overflow: hidden;
 }
 
 header {
@@ -26,43 +26,47 @@ header {
     position: absolute;
     top: 0; left: 0; right: 0;
     z-index: 100;
-    background: linear-gradient(to bottom, var(--bg-color) 80%, rgba(248,250,252,0));
-    pointer-events: none; /* Чтобы сквозь шапку можно было перетаскивать соты */
+    background: linear-gradient(to bottom, var(--bg-color) 70%, rgba(248,250,252,0));
+    pointer-events: none;
 }
 header h1, header p { pointer-events: auto; }
 
-/* Окно просмотра: занимает весь экран */
+/* Окно просмотра */
 .viewport {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    cursor: grab; /* Иконка руки для перетаскивания */
+    cursor: grab;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .viewport:active {
-    cursor: grabbing; /* Иконка сжатого кулака при перетаскивании */
+    cursor: grabbing;
 }
 
-/* Бесконечный холст для сот */
+/* Холст для сот (стыковка по граням) */
 .achievements-grid {
     display: grid;
-    /* Настройка автоматического распределения колонок */
-    grid-template-columns: repeat(4, var(--hex-width));
+    /* Колонки идут с наложением для зацепа боковых граней */
+    grid-template-columns: repeat(4, calc(var(--hex-width) * 0.75));
     grid-column-gap: var(--gap);
-    grid-row-gap: calc(var(--gap) - var(--hex-height) / 4);
-    padding: 400px; /* Запас места во все стороны для бесконечного скролла */
-    user-select: none; /* Запрещаем выделение текста при перетаскивании */
+    grid-row-gap: var(--gap);
+    padding: 500px;
+    will-change: transform;
 }
 
-/* Шестиугольник */
+/* Шестиугольник, повернутый на грани (плоский сверху/снизу) */
 .achievement-card {
     width: var(--hex-width);
     height: var(--hex-height);
     background: var(--card-bg);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+
+    /* Новый полигон: плоский верх и низ, острые углы по бокам */
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -70,46 +74,32 @@ header h1, header p { pointer-events: auto; }
     box-sizing: border-box;
     padding: 20px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.25s;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+
+    /* Оптимизация для плавной анимации преломления */
+    will-change: transform, opacity;
+    transform-origin: center center;
+    transition: background-color 0.25s ease;
 }
 
-/* Формируем шахматное зацепление рядов (эффект Apple Watch) */
-/* В сетке из 4 колонок сдвигаем 2-й и 4-й столбцы */
-.achievement-card:nth-child(4n-2),
-.achievement-card:nth-child(4n) {
+/* Сдвиг нечетных колонок по вертикали для стыковки горизонтальных граней */
+.achievement-card:nth-child(even) {
     transform: translateY(calc(var(--hex-height) / 2 + var(--gap) / 2));
 }
 
 .card-icon {
-    font-size: 2.3rem;
-    margin-bottom: 5px;
-    transition: transform 0.2s;
+    font-size: 2.2rem;
+    margin-bottom: 4px;
+    pointer-events: none;
 }
 
 .card-title {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     margin: 0;
     line-height: 1.2;
+    pointer-events: none;
 }
-
-.card-date { display: none; }
-
-/* Ховер-эффекты */
-.achievement-card:hover {
-    background-color: #e0f2fe;
-    z-index: 10;
-}
-.achievement-card:nth-child(4n-2):hover,
-.achievement-card:nth-child(4n):hover {
-    transform: translateY(calc(var(--hex-height) / 2 + var(--gap) / 2)) scale(1.1) !important;
-}
-.achievement-card:nth-child(4n-3):hover,
-.achievement-card:nth-child(4n-1):hover {
-    transform: scale(1.1) !important;
-}
-.achievement-card:hover .card-icon { transform: scale(1.15); }
 
 /* Модальное окно */
 .modal {
