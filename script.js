@@ -14,14 +14,17 @@ const grid = document.getElementById('achievementsGrid');
 const modal = document.getElementById('achievementModal');
 const closeModalBtn = document.getElementById('closeModal');
 
+// Отрисовка сот: теперь иконка и текст обернуты во внутренний контейнер .card-content
 function renderAchievements() {
     grid.innerHTML = '';
     achievementsData.forEach(ach => {
         const card = document.createElement('div');
         card.classList.add('achievement-card');
         card.innerHTML = `
-            <div class="card-icon">${ach.icon}</div>
-            <h3 class="card-title">${ach.title}</h3>
+            <div class="card-content">
+                <div class="card-icon">${ach.icon}</div>
+                <h3 class="card-title">${ach.title}</h3>
+            </div>
         `;
         card.addEventListener('click', () => openModal(ach));
         grid.appendChild(card);
@@ -37,15 +40,22 @@ function openModal(ach) {
 }
 closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
 
+// --- ЛОГИКА ДВИЖЕНИЯ С ИНЕРЦИЕЙ И ФИКСИРОВАННЫМИ ГРАНЯМИ ---
 let isDragging = false;
 let startX, startY;
 let currentX = 0, currentY = 0;
 let targetX = 0, targetY = 0;
 const ease = 0.12;
 
+// Улучшенное идеальное центрирование облака сот по центру экрана
 function initCenter() {
-    const initLeft = (grid.scrollWidth - window.innerWidth) / 2;
-    const initTop = (grid.scrollHeight - window.innerHeight) / 2;
+    const hexWidth = 155; // Должно совпадать с --hex-width из CSS
+    const hexHeight = hexWidth * 0.866;
+
+    // Вычисляем точные координаты центра холста со смещением на половину соты
+    const initLeft = (grid.scrollWidth - window.innerWidth) / 2 + (hexWidth / 4);
+    const initTop = (grid.scrollHeight - window.innerHeight) / 2 - (hexHeight / 4);
+
     targetX = -initLeft;
     targetY = -initTop;
     currentX = targetX;
@@ -86,8 +96,6 @@ function updateAnimation() {
     const cards = document.querySelectorAll('.achievement-card');
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
-
-    // СУЗИЛИ ПОЛЕ: теперь искажение начинается гораздо ближе к центру экрана
     const maxDistance = Math.min(centerX, centerY) * 0.85;
 
     cards.forEach((card, index) => {
@@ -99,19 +107,32 @@ function updateAnimation() {
         const distY = cardCenterY - centerY;
         const distance = Math.sqrt(distX * distX + distY * distY);
 
-        const baseTranslateY = (index % 4 === 1 || index % 4 === 3) ? (rect.height / 2 + 6) : 0;
+        // Стандартный сдвиг рядов по вертикали для стыковки граней
+        const baseTranslateY = (index % 4 === 1 || index % 4 === 3) ? (rect.height / 2 + 7) : 0;
+
+        // Находим внутреннее содержимое соты
+        const cardContent = card.querySelector('.card-content');
 
         if (distance < maxDistance) {
             const progress = distance / maxDistance;
-            // Сжатие по краям стало более выраженным (коэффициент 0.55)
-            const scale = 1 - Math.pow(progress, 2) * 0.55;
-            const opacity = 1 - Math.pow(progress, 2) * 0.5;
+            const scale = 1 - Math.pow(progress, 2) * 0.5;
+            const opacity = 1 - Math.pow(progress, 2) * 0.55;
 
-            card.style.transform = `translateY(${baseTranslateY}px) scale(${scale})`;
+            // КАРКАС СОТЫ (card): Перемещается, но НЕ масштабируется. Зазоры стабильны!
+            card.style.transform = `translateY(${baseTranslateY}px)`;
             card.style.opacity = opacity;
+
+            // КОНТЕНТ (иконка + текст): Преломляется и сжимается внутри соты
+            if (cardContent) {
+                cardContent.style.transform = `scale(${scale})`;
+            }
         } else {
-            card.style.transform = `translateY(${baseTranslateY}px) scale(0.45)`;
-            card.style.opacity = 0.3;
+            // За пределами радиуса видимости
+            card.style.transform = `translateY(${baseTranslateY}px)`;
+            card.style.opacity = 0.35;
+            if (cardContent) {
+                cardContent.style.transform = `scale(0.5)`;
+            }
         }
     });
 
