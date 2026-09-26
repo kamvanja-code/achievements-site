@@ -44,7 +44,7 @@ let targetX = 0, targetY = 0;
 const ease = 0.12;
 
 function initCenter() {
-    const hexWidth = 155;
+    const hexWidth = 140; // Синхронизировано со стилями
     const hexHeight = hexWidth * 0.866;
     const initLeft = (grid.scrollWidth - window.innerWidth) / 2 + (hexWidth / 4);
     const initTop = (grid.scrollHeight - window.innerHeight) / 2 - (hexHeight / 4);
@@ -55,31 +55,33 @@ function initCenter() {
     currentY = targetY;
 }
 
+// События мыши (Десктоп)
 viewport.addEventListener('mousedown', (e) => {
     isDragging = true;
     startX = e.clientX - targetX;
     startY = e.clientY - targetY;
 });
-
 window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     targetX = e.clientX - startX;
     targetY = e.clientY - startY;
 });
-
 window.addEventListener('mouseup', () => isDragging = false);
 
+// Исправленные события тач-скрина (Мобильные)
 viewport.addEventListener('touchstart', (e) => {
     isDragging = true;
-    startX = e.touches.clientX - targetX;
-    startY = e.touches.clientY - targetY;
-});
-viewport.addEventListener('touchmove', (e) => {
+    startX = e.touches[0].clientX - targetX;
+    startY = e.touches[0].clientY - targetY;
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
-    targetX = e.touches.clientX - startX;
-    targetY = e.touches.clientY - startY;
-});
-viewport.addEventListener('touchend', () => isDragging = false);
+    targetX = e.touches[0].clientX - startX;
+    targetY = e.touches[0].clientY - startY;
+}, { passive: true });
+
+window.addEventListener('touchend', () => isDragging = false);
 
 function updateAnimation() {
     currentX += (targetX - currentX) * ease;
@@ -89,7 +91,7 @@ function updateAnimation() {
     const cards = document.querySelectorAll('.achievement-card');
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
-    const maxDistance = Math.min(centerX, centerY) * 0.85;
+    const maxDistance = Math.min(centerX, centerY) * 0.95;
 
     cards.forEach((card, index) => {
         const rect = card.getBoundingClientRect();
@@ -100,18 +102,19 @@ function updateAnimation() {
         const distY = cardCenterY - centerY;
         const distance = Math.sqrt(distX * distX + distY * distY);
 
-        const baseTranslateY = (index % 4 === 1 || index % 4 === 3) ? (rect.height / 2 + 7) : 0;
+        const baseTranslateY = (index % 4 === 1 || index % 4 === 3) ? (rect.height / 2 + 6) : 0;
 
         if (distance < maxDistance) {
             const progress = distance / maxDistance;
-            const scale = 1 - Math.pow(progress, 2) * 0.5;
-            const opacity = 1 - Math.pow(progress, 2) * 0.55;
+            // Безопасное масштабирование для мобильных экранов
+            const scale = 1 - Math.pow(progress, 2) * 0.4;
+            const opacity = 1 - Math.pow(progress, 2) * 0.6;
 
-            // Сжатие ПРИМЕНЯЕТСЯ К САМОЙ СОТЕ, возвращая эффект линзы Apple Watch
-            card.style.transform = `translateY(${baseTranslateY}px) scale(${scale})`;
+            card.style.transform = `translate3d(0, ${baseTranslateY}px, 0) scale(${scale})`;
             card.style.opacity = opacity;
         } else {
-            card.style.transform = `translateY(${baseTranslateY}px) scale(0.45)`;
+            // Безопасный минимальный лимит: плашка не сожмется до нуля и не исчезнет
+            card.style.transform = `translate3d(0, ${baseTranslateY}px, 0) scale(0.6)`;
             card.style.opacity = 0.35;
         }
     });
